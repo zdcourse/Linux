@@ -1,0 +1,75 @@
+* Load Balance a web service
+    Linux 课程作业
+
+** 项目介绍
+    搭建一个如下图所示的 web 服务，需要 lb。
+    #+ATTR_HTML: :width 100%
+[[file:./imgs/20171125_203337_39300sYm.png]]
+
+
+** 安装 nginx
+    机器：ubuntu 14.04
+    #+BEGIN_SRC shell
+    sudo add-apt-repository ppa:nginx/stable
+    sudo apt-get update
+    sudo apt-get install nginx
+    #+END_SRC
+
+    安装完成后，
+    #+BEGIN_SRC shell
+    sudo service nginx restart
+    #+END_SRC
+
+    下面，我们在浏览器上访问一下上面机器的地址。如果出现 Nginx 界面证明已经安装成功了。
+    #+ATTR_HTML: :width 100%
+[[file:./imgs/20171125_203905_393005is.png]]
+
+** 配置 nginx 作为一个 lb
+    执行下面的命令：
+    #+BEGIN_SRC shell
+    sudo vim /etc/nginx/conf.d/load-balancer.conf
+    #+END_SRC
+
+    上面的文件需要创建，其中的内容如下：
+    #+BEGIN_SRC python
+    upstream backend {
+        server localhost:8001;
+        server localhost:8002;
+        server localhost:8003;
+    }
+
+    server {
+        listen 80;
+        location / {
+            proxy_pass http://backend;
+        }
+    }
+    #+END_SRC
+
+    下一步是删除一些文件：
+    #+BEGIN_SRC shell
+    sudo rm /etc/nginx/sites-enabled/default
+    #+END_SRC
+
+    重启 nginx 服务：
+    #+BEGIN_SRC shell
+    sudo service nginx restart
+    #+END_SRC
+
+** 启动 web 服务
+    Nginx 是可以了，但是我们还缺少一个 web 服务。我用 python 写了一个，就是 hello-world.py 这个文件。
+
+    执行下面的命令：
+    #+BEGIN_SRC shell
+    python hello-world.py 8001 &
+    python hello-world.py 8002 &
+    python hello-world.py 8003 &
+    #+END_SRC
+
+    下面应该是启动成功了。
+
+    我们在浏览器上直接访问虚拟机的地址就可以了。
+    #+ATTR_HTML: :width 100%
+[[file:./imgs/20171125_204640_39300Gty.png]]
+
+    我们刷新一下就会看服务的地址在变化了。默认的 lb 算法是 round robin。
